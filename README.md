@@ -1,9 +1,9 @@
-# 项目概况
+### 项目概况
 
 基于LLM的智能智能面试系统DEMO
 
 
-## 环境配置
+### 环境配置
 
 
 1. 在环境变量中设置OPENAI_API_KEY
@@ -22,7 +22,7 @@ pip install --no-cache-dir --upgrade --force-reinstall -Iv grpcio gevent
 pip install -r requirements.txt
 ```
 
-3. 运行项目
+### 运行项目
 
 ```bash
 streamlit run interview_streamlit.py
