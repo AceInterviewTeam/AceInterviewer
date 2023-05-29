@@ -218,7 +218,10 @@ if __name__ == "__main__":
     parser.add_argument("--model", default="text-davinci-002")
     parser.add_argument("--max-tokens", type=int, default=100)
     parser.add_argument("--cache-dir")
-    args = parser.parse_args()
+    # args = parser.parse_args(args=[])
+
+    args = parser.parse_args(args=[])
+    
 
     from settings import Settings
 

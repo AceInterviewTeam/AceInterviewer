@@ -11,13 +11,14 @@ from settings import Settings
 import utils
 
 MODELS = [
-    "text-davinci-003",
-    "text-davinci-002",
-    "text-curie-001",
-    "text-babbage-001",
-    "text-ada-001",
-    "code-davinci-002",
-    "code-cushman-001",
+    "text-davinci-003"
+    # "text-davinci-002",
+    # "text-curie-001",
+    # "text-babbage-001",
+    # "text-ada-001",
+    # "code-davinci-002",
+    # "code-cushman-001",
+    # "gpt-3.5-turbo"
 ]
 # STOP_SEQUENCES = [
 #     "Candidate:",
@@ -213,11 +214,11 @@ def main():
         session.candidate_text = ""
 
     with st.sidebar:
-        model = st.selectbox(
-            "Model",
-            MODELS,
-            index=0,
-        )
+        # model = st.selectbox(
+        #     "Model",
+        #     MODELS,
+        #     index=0,
+        # )
         max_tokens = st.number_input(
             "Max tokens",
             value=64,
@@ -278,7 +279,7 @@ def main():
             resp = run_completion(
                 oai_client=oai_client,
                 prompt_text=prompt_text,
-                model=model,  # type: ignore
+                model= "text-davinci-003",  # type: ignore
                 stop=stop,
                 max_tokens=max_tokens,  # type: ignore
                 temperature=temperature,
