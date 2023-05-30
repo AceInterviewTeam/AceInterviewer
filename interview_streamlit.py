@@ -9,17 +9,68 @@ import diskcache
 from oai_client import OAIClient
 from settings import Settings
 import utils
+import av
+import numpy as np
+import streamlit_webrtc as webrtc
+from audio_recorder_streamlit import audio_recorder
+import streamlit_webrtc as webrtc
+import speech_recognition as sr
+import tempfile 
+import os
+import pyttsx3
+
+
+
+
+
+
+
 
 MODELS = [
-    "text-davinci-003"
-    # "text-davinci-002",
-    # "text-curie-001",
-    # "text-babbage-001",
-    # "text-ada-001",
-    # "code-davinci-002",
-    # "code-cushman-001",
-    # "gpt-3.5-turbo"
+    "text-davinci-003",
+    "text-davinci-002",
+    "text-curie-001",
+    "text-babbage-001",
+    "text-ada-001",
+    "code-davinci-002",
+    "code-cushman-001",
 ]
+
+def speak_text(text):
+    # 创建 TTS 引擎
+    engine = pyttsx3.init()
+
+    # 设置语速（可选）
+    engine.setProperty('rate', 150)  # 调整语速，可以根据需要进行调整
+
+    # 使用 TTS 引擎朗读文本
+    engine.say(text)
+    engine.runAndWait()
+
+def convert_speech_to_text(audio_bytes):
+    recognizer = sr.Recognizer()
+    
+    # 创建一个临时文件，将音频数据写入其中
+    temp_audio_fd, temp_audio_path = tempfile.mkstemp(suffix='.wav')
+    with open(temp_audio_fd, 'wb') as temp_audio:
+        temp_audio.write(audio_bytes)
+
+    # 使用临时文件进行语音识别
+    with sr.AudioFile(temp_audio_path) as source:
+        audio = recognizer.record(source)
+    
+    try:
+        text = recognizer.recognize_google(audio, language='zh-CN')  # 使用Google语音识别引擎，语言为中文
+        return text
+    except sr.UnknownValueError:
+        print("语音识别无法理解")
+    except sr.RequestError:
+        print("无法连接到语音识别服务")
+    
+    # 删除临时文件
+    os.remove(temp_audio_path)
+    
+    return None
 # STOP_SEQUENCES = [
 #     "Candidate:",
 #     "Interviewer:",
@@ -198,7 +249,8 @@ def get_oai_key():
     import os
     # oai_key = st.secrets.get("OPENAI_API_KEY")
     # if oai_key is None:
-    oai_key = os.environ.get("OPENAI_API_KEY")
+    # oai_key = os.environ.get("OPENAI_API_KEY")
+    oai_key = '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'
     if oai_key is None:
         raise Exception("Must set `OPENAI_API_KEY` environment variable or in .streamlit/secrets.toml")
     return oai_key
@@ -214,11 +266,11 @@ def main():
         session.candidate_text = ""
 
     with st.sidebar:
-        # model = st.selectbox(
-        #     "Model",
-        #     MODELS,
-        #     index=0,
-        # )
+        model = st.selectbox(
+            "Model",
+            MODELS,
+            index=0,
+        )
         max_tokens = st.number_input(
             "Max tokens",
             value=64,
@@ -247,21 +299,52 @@ def main():
             value=INITIAL_QUESTION,
         )
 
+    audio_bytes = audio_recorder(
+        text="",
+        recording_color="#e8b62c",
+        neutral_color="#6aa36f",
+        icon_name="microphone",
+        icon_size="1x",
+    )
+
+    # if audio_bytes:
+    #     st.audio(audio_bytes, format="audio/wav") # 显示语音进度条
+    #     text = convert_speech_to_text(audio_bytes)
+
+    #     print("转换后的文本:", text)
+    #     st.write(text)
     with chat_tab:
         st.write("\n\n".join(session.transcript))
 
         def clear_text():
             session.transcript.append(f"Candidate: {candidate_text.strip()}")
             session["candidate_text"] = ""
+        if audio_bytes:
+            text = convert_speech_to_text(audio_bytes)
+            candidate_text = chat_tab.text_area(
+                "Interview Chat",
 
-        candidate_text = chat_tab.text_area(
-            "Interview Chat",
-            height=50,
-            key="candidate_text",
-            help="Write the candidate text here"
-        )
+                height=50,
+                # key="candidate_text",
+                help="Write the candidate text here",
+                value = text
+            )
+        else:
+            candidate_text = chat_tab.text_area(
+                "Interview Chat",
+
+                height=50,
+                key="candidate_text",
+                help="Write the candidate text here",
+
+            )
+
 
         run_button = st.button("Enter", help="Submit your chat", on_click=clear_text)
+
+
+
+
         if run_button:
             if not resume_text:
                 st.error("Please enter a resume")
@@ -279,7 +362,7 @@ def main():
             resp = run_completion(
                 oai_client=oai_client,
                 prompt_text=prompt_text,
-                model= "text-davinci-003",  # type: ignore
+                model=model,  # type: ignore
                 stop=stop,
                 max_tokens=max_tokens,  # type: ignore
                 temperature=temperature,
@@ -287,7 +370,7 @@ def main():
             completion_text = resp["completion"].strip()
             if completion_text:
                 print("Completion Result: \n\n", completion_text)
-
+                speak_text(completion_text)
             session.transcript.append(f"Interviewer: {completion_text}")
             st.experimental_rerun()
 
@@ -312,6 +395,7 @@ def main():
                 )
                 st.write(resp["completion"])
 
+                
 
 if __name__ == "__main__":
     main()
