@@ -19,21 +19,23 @@ import tempfile
 import os
 import pyttsx3
 
-
-
-
-
-
-
-
-MODELS = [
-    "text-davinci-003",
-    "text-davinci-002",
-    "text-curie-001",
-    "text-babbage-001",
-    "text-ada-001",
-    "code-davinci-002",
-    "code-cushman-001",
+# MODELS = [
+#     "text-davinci-003",
+#     "text-davinci-002",
+#     "text-curie-001",
+#     "text-babbage-001",
+#     "text-ada-001",
+#     "code-davinci-002",
+#     "code-cushman-001",
+# ]
+positionType = [
+    "前端工程师",
+    "后端工程师",
+    "计算机视觉工程师",
+    "NLP算法工程师",
+    "测试开发工程师",
+    "人力资源专员hr",
+    "会计",
 ]
 
 def speak_text(text):
@@ -45,6 +47,8 @@ def speak_text(text):
 
     # 使用 TTS 引擎朗读文本
     engine.say(text)
+    # print("=========已执行============")
+    # engine.say("春光灿烂猪八戒")
     engine.runAndWait()
 
 def convert_speech_to_text(audio_bytes):
@@ -116,7 +120,7 @@ Recommendation: <Hire / No-Hire>
 YOUR FEEDBACK:
 """.strip()
 
-INITIAL_TRANSCRIPT = "Interviewer: Hi, how are you doing today?"
+INITIAL_TRANSCRIPT = "Interviewer: 你好"
 
 INITIAL_RESUME = """
 Senior AI/Robotics Engineer
@@ -156,6 +160,7 @@ Here is a snippet from the candidate's resume, so you have context and can ask s
 CANDIDATE RESUME:
 
 {{resume}}
+
 
 (END OF RESUME)
 
@@ -265,14 +270,14 @@ def main():
         session.candidate_text = ""
 
     with st.sidebar:
-        model = st.selectbox(
-            "Model",
-            MODELS,
-            index=0,
-        )
+        # model = st.selectbox(
+        #     "Model",
+        #     MODELS,
+        #     index=0,
+        # )
         max_tokens = st.number_input(
             "Max tokens",
-            value=64,
+            value=512,
             min_value=0,
             max_value=2048,
             step=2,
@@ -282,14 +287,26 @@ def main():
         )
         stop = ["Candidate:", "Interviewer:"]
 
-    chat_tab, resume_tab, question_tab, feedback_tab = st.tabs(["Chat", "Resume", "Question", "Feedback"])
+    resume_tab,chat_tab,question_tab, feedback_tab = st.tabs(["简历填写", "面试", "prompt", "面试反馈"])
 
     with resume_tab:
+        # st.write("\n\n".join(session.transcript))
+        def clear_text():
+            session.transcript.append(f"Candidate: {candidate_text.strip()}")
+            session["candidate_text"] = ""
         resume_text = resume_tab.text_area(
-            "Candidate Resume",
-            height=700,
-            value=INITIAL_RESUME,
+            "候选人简历",
+            height=500,
+            
         )
+        position = st.selectbox(
+            "岗位",
+            positionType,
+           
+        )
+        print("**********选择岗位是*************\n",position)
+    # run_button1 = st.button("提交", help="提交你的简历", on_click=clear_text)
+        run_button1 = st.button("提交")
     
     with question_tab:
         question_text = question_tab.text_area(
@@ -298,13 +315,7 @@ def main():
             value=INITIAL_QUESTION,
         )
 
-    audio_bytes = audio_recorder(
-        text="",
-        recording_color="#e8b62c",
-        neutral_color="#6aa36f",
-        icon_name="microphone",
-        icon_size="1x",
-    )
+        
 
     # if audio_bytes:
     #     st.audio(audio_bytes, format="audio/wav") # 显示语音进度条
@@ -315,14 +326,21 @@ def main():
     with chat_tab:
         st.write("\n\n".join(session.transcript))
 
+
         def clear_text():
             session.transcript.append(f"Candidate: {candidate_text.strip()}")
             session["candidate_text"] = ""
+        audio_bytes = audio_recorder(
+            text="",
+            recording_color="#e8b62c",
+            neutral_color="#6aa36f",
+            icon_name="microphone",
+            icon_size="1x",
+        )
         if audio_bytes:
             text = convert_speech_to_text(audio_bytes)
             candidate_text = chat_tab.text_area(
                 "Interview Chat",
-
                 height=50,
                 # key="candidate_text",
                 help="Write the candidate text here",
@@ -331,7 +349,6 @@ def main():
         else:
             candidate_text = chat_tab.text_area(
                 "Interview Chat",
-
                 height=50,
                 key="candidate_text",
                 help="Write the candidate text here",
@@ -340,8 +357,6 @@ def main():
 
 
         run_button = st.button("Enter", help="Submit your chat", on_click=clear_text)
-
-
 
 
         if run_button:
@@ -361,7 +376,7 @@ def main():
             resp = run_completion(
                 oai_client=oai_client,
                 prompt_text=prompt_text,
-                model=model,  # type: ignore
+                model="text-davinci-003",  # type: ignore
                 stop=stop,
                 max_tokens=max_tokens,  # type: ignore
                 temperature=temperature,
@@ -369,12 +384,12 @@ def main():
             completion_text = resp["completion"].strip()
             if completion_text:
                 print("Completion Result: \n\n", completion_text)
-                speak_text(completion_text)
+                # speak_text(completion_text)
             session.transcript.append(f"Interviewer: {completion_text}")
             st.experimental_rerun()
 
         with feedback_tab:
-            st.header("Candidate Feedback")
+            st.header("候选人面试反馈")
             prompt_text = utils.inject_inputs(
                 question_text, input_keys=["transcript", "resume"], inputs={
                     "transcript": session.transcript,
@@ -382,11 +397,11 @@ def main():
                 }
             )
             feedback_prompt_text = prompt_text + "\n\n" + FEEDBACK_PROMPT
-            if st.button("Generate Feedback"):
+            if st.button("生成面试反馈"):
                 resp = run_completion(
                     oai_client=oai_client,
                     prompt_text=feedback_prompt_text,
-                    model=model,  # type: ignore
+                    model="text-davinci-003",  # type: ignore
                     stop=stop,
                     max_tokens=400,  # type: ignore
                     temperature=temperature,
