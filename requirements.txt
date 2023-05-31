@@ -14,7 +14,7 @@ streamlit_webrtc
 azure-cognitiveservices-speech
 audio_recorder_streamlit
 SpeechRecognition 
-
+speech-interface
 
 # Dev
 black
