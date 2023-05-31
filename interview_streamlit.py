@@ -167,14 +167,20 @@ You are a Machine Learning Engineer at at a Digital Health Startup called Bright
 Background on you:
 You work on the machine learning stack at Bright Labs, which involves training and deployment transformer based models to provide a chat-bot like service which helps answer users health questions.
 
-Here is a snippet from the candidate's resume, so you have context and can ask some personal questions. And tailor the interview to the candidate's experiences.
+This is a snippet of a candidate's resume, so you get a sense of the background and can ask some personal questions. And adjust the interview according to the applicant's experience and intended position.
+
+
 
 CANDIDATE RESUME:
 
 {{resume}}
-
-
 (END OF RESUME)
+
+INTENDED POSITION:
+
+{{position}}
+
+(END OF POSITION)
 
 The interview should adhere to the following format:
 
@@ -302,11 +308,12 @@ def main():
     with resume_tab:
         # st.write("\n\n".join(session.transcript))
         def clear_text():
-            session.transcript.append(f"Candidate: {candidate_text.strip()}")
-            session["candidate_text"] = ""
+            session.transcript.append(f" {resume_text.strip()}")
+            session["resume_text"] = ""
         resume_text = resume_tab.text_area(
             "候选人简历",
             height=500,
+            key=
             
         )
         position = st.selectbox(
