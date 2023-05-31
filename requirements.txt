@@ -10,11 +10,11 @@ httpx
 trio-websocket
 pydantic
 trio
-av
 streamlit_webrtc
+azure-cognitiveservices-speech
+speech_recognition
 audio_recorder_streamlit
-SpeechRecognition
-pyttsx3
+
 
 # Dev
 black

@@ -17,7 +17,13 @@ import streamlit_webrtc as webrtc
 import speech_recognition as sr
 import tempfile 
 import os
-import pyttsx3
+
+import azure.cognitiveservices.speech as speechsdk
+
+
+
+
+
 
 # MODELS = [
 #     "text-davinci-003",
@@ -38,18 +44,24 @@ positionType = [
     "会计",
 ]
 
-def speak_text(text):
-    # 创建 TTS 引擎
-    engine = pyttsx3.init()
 
-    # 设置语速（可选）
-    engine.setProperty('rate', 150)  # 调整语速，可以根据需要进行调整
 
-    # 使用 TTS 引擎朗读文本
-    engine.say(text)
-    # print("=========已执行============")
-    # engine.say("春光灿烂猪八戒")
-    engine.runAndWait()
+
+# 设置服务密钥和终结点
+speech_key = "8046cb11ab7a494da541e0187e1a1c2d"
+service_region = "eastus"
+
+
+# 创建一个SpeechConfig对象并设置密钥和区域
+speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=service_region)
+# 设置语音合成的语言和语音样式（根据需要进行修改）
+speech_config.speech_synthesis_language = "zh-CN"
+speech_config.speech_synthesis_voice_name = "zh-CN-XiaoxiaoNeural"
+# 创建一个SpeechSynthesizer对象
+synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config)
+
+# result = synthesizer.speak_text_async(text).get()
+
 
 def convert_speech_to_text(audio_bytes):
     recognizer = sr.Recognizer()
@@ -252,8 +264,6 @@ def run_completion(
 
 def get_oai_key():
     import os
-    # oai_key = st.secrets.get("OPENAI_API_KEY")
-    # if oai_key is None:
     oai_key = os.environ.get("OPENAI_API_KEY")
     if oai_key is None:
         raise Exception("Must set `OPENAI_API_KEY` environment variable or in .streamlit/secrets.toml")
@@ -317,12 +327,7 @@ def main():
 
         
 
-    # if audio_bytes:
-    #     st.audio(audio_bytes, format="audio/wav") # 显示语音进度条
-    #     text = convert_speech_to_text(audio_bytes)
 
-    #     print("转换后的文本:", text)
-    #     st.write(text)
     with chat_tab:
         st.write("\n\n".join(session.transcript))
 
@@ -385,8 +390,7 @@ def main():
             if completion_text:
                 print("Completion Result: \n\n", completion_text)
                 # speak_text(completion_text)
-            session.transcript.append(f"Interviewer: {completion_text}")
-            st.experimental_rerun()
+                result = synthesizer.speak_text_async(completion_text).get()
 
         with feedback_tab:
             st.header("候选人面试反馈")
