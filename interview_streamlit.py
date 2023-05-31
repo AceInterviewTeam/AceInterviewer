@@ -284,6 +284,7 @@ def main():
     if "transcript" not in session:
         session.transcript = [INITIAL_TRANSCRIPT]
         session.candidate_text = ""
+        session.resume_text = ""
 
     with st.sidebar:
         # model = st.selectbox(
@@ -307,13 +308,13 @@ def main():
 
     with resume_tab:
         # st.write("\n\n".join(session.transcript))
-        def clear_text():
+        def clear_ResumeText():
             session.transcript.append(f" {resume_text.strip()}")
             session["resume_text"] = ""
         resume_text = resume_tab.text_area(
             "候选人简历",
             height=500,
-            key=
+            key="resume_text",
             
         )
         position = st.selectbox(
@@ -321,9 +322,9 @@ def main():
             positionType,
            
         )
-        print("**********选择岗位是*************\n",position)
+        print("**********选择岗位是*************\n",resume_text)
     # run_button1 = st.button("提交", help="提交你的简历", on_click=clear_text)
-        run_button1 = st.button("提交")
+        # run_button1 = st.button("提交",on_click=clear_ResumeText)
     
     with question_tab:
         question_text = question_tab.text_area(
@@ -373,14 +374,15 @@ def main():
 
         if run_button:
             if not resume_text:
-                st.error("Please enter a resume")
+                st.error("请输入简历")
             if not question_text:
                 st.error("Please enter a question")
             
             prompt_text = utils.inject_inputs(
                 question_text, input_keys=["transcript", "resume"], inputs={
                     "transcript": session.transcript,
-                    "resume": INITIAL_RESUME,
+                    "resume": resume_text,
+                    "position":position,
                 }
             ) + "\nInterviewer:"
             print("prompt_text\n\n", prompt_text)
