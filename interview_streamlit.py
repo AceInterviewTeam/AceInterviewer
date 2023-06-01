@@ -279,6 +279,7 @@ def get_oai_key():
     return oai_key
 
 
+
 def main():
     utils.init_page_layout()
     session = st.session_state
@@ -288,6 +289,9 @@ def main():
         session.transcript = [INITIAL_TRANSCRIPT]
         session.candidate_text = ""
         session.resume_text = ""
+        session.custom_prompt_text = INITIAL_QUESTION
+
+    
 
     with st.sidebar:
         # model = st.selectbox(
@@ -307,7 +311,7 @@ def main():
         )
         stop = ["Candidate:", "Interviewer:"]
 
-    resume_tab,chat_tab,question_tab, feedback_tab = st.tabs(["简历填写", "面试", "prompt", "面试反馈"])
+    resume_tab, chat_tab, question_tab,feedback_tab = st.tabs(["简历填写", "面试", "初始prompt","面试反馈"])
 
     with resume_tab:
         # st.write("\n\n".join(session.transcript))
@@ -330,11 +334,23 @@ def main():
         # run_button1 = st.button("提交",on_click=clear_ResumeText)
     
     with question_tab:
-        question_text = question_tab.text_area(
+        question_text1 = question_tab.text_area(
             "Question Prompt",
             height=700,
+            key="custom_prompt_text",
             value=INITIAL_QUESTION,
         )
+    # with question_tab2:
+    #     question_text2 = question_tab2.text_area(
+    #         "自定义Prompt",
+    #         height=700,
+    #         key="custom_prompt_text",
+    #     )
+   
+        print("========初始prompt=========\n", question_text1)
+        print("*******************************************\n\n")
+        # print("========自定义prompt=========\n", question_text2)
+        
 
         
 
@@ -378,11 +394,18 @@ def main():
         if run_button:
             if not resume_text:
                 st.error("请输入简历")
-            if not question_text:
+            if not question_text1:
                 st.error("Please enter a question")
-            
+
+            def choosePrompt(question_text1, question_text2):
+                if not question_text2:
+                    question_text = question_text2
+                else:
+                    question_text = question_text1
+                print("question_text", question_text)
+                return question_text
             prompt_text = utils.inject_inputs(
-                question_text, input_keys=["transcript", "resume"], inputs={
+                question_text1, input_keys=["transcript", "resume"], inputs={
                     "transcript": session.transcript,
                     "resume": resume_text,
                     "position":position,
@@ -402,16 +425,26 @@ def main():
             if completion_text:
                 print("Completion Result: \n\n", completion_text)
                 # speak_text(completion_text)
-                synthesizer = speechsdk.SpeechSynthesizer(
-                    speech_config=speech_config)
-                result = synthesizer.speak_text_async(completion_text).get()
+            #文本显示面试官的回答
+            session.transcript.append(f"Interviewer: {completion_text}")
+            st.experimental_rerun()
+                #语音读出面试官的回答
+                # synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config)
+                # result = synthesizer.speak_text_async(completion_text).get()
 
         with feedback_tab:
             st.header("候选人面试反馈")
+            def choosePrompt(question_text1, question_text2):
+                if not question_text2:
+                    question_text = question_text2
+                else:
+                    question_text = question_text1
+                print("question_text", question_text)
+                return question_text
             prompt_text = utils.inject_inputs(
-                question_text, input_keys=["transcript", "resume"], inputs={
+                question_text1, input_keys=["transcript", "resume"], inputs={
                     "transcript": session.transcript,
-                    "resume": INITIAL_RESUME,
+                    "resume": resume_text,
                 }
             )
             feedback_prompt_text = prompt_text + "\n\n" + FEEDBACK_PROMPT
