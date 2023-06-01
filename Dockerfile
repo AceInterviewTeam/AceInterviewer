@@ -14,6 +14,7 @@ COPY . .
 
 RUN pip3 install virtualenv
 RUN virtualenv .venv --python python3
+SHELL ["/bin/bash", "-c"]  
 RUN source .venv/bin/activate
 RUN pip3 install -r requirements.txt
 
