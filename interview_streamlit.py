@@ -25,6 +25,7 @@ import io
 
 
 
+
 # MODELS = [
 #     "text-davinci-003",
 #     "text-davinci-002",
@@ -52,11 +53,6 @@ speech_key = "8046cb11ab7a494da541e0187e1a1c2d"
 service_region = "eastus"
 
 
-
-
-
-# 文字转语音
-
 # 创建一个SpeechConfig对象并设置密钥和区域
 speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=service_region)
 # 设置语音合成的语言和语音样式（根据需要进行修改）
@@ -71,10 +67,31 @@ speech_config.speech_synthesis_voice_name = "zh-CN-XiaoxiaoNeural"
 
 # result = synthesizer.speak_text_async(text).get()
 
-# 语音转文字
 
+def convert_speech_to_text(audio_bytes):
+    recognizer = sr.Recognizer()
+    
+    # 创建一个临时文件，将音频数据写入其中
+    temp_audio_fd, temp_audio_path = tempfile.mkstemp(suffix='.wav')
+    with open(temp_audio_fd, 'wb') as temp_audio:
+        temp_audio.write(audio_bytes)
 
-
+    # 使用临时文件进行语音识别
+    with sr.AudioFile(temp_audio_path) as source:
+        audio = recognizer.record(source)
+    
+    try:
+        text = recognizer.recognize_google(audio, language='zh-CN')  # 使用Google语音识别引擎，语言为中文
+        return text
+    except sr.UnknownValueError:
+        print("语音识别无法理解")
+    except sr.RequestError:
+        print("无法连接到语音识别服务")
+    
+    # 删除临时文件
+    os.remove(temp_audio_path)
+    
+    return None
 # STOP_SEQUENCES = [
 #     "Candidate:",
 #     "Interviewer:",
@@ -269,7 +286,7 @@ def main():
     utils.init_page_layout()
     session = st.session_state
     oai_client = init_oai_client(get_oai_key())
-
+    openai.api_key = get_oai_key()
     if "transcript" not in session:
         session.transcript = [INITIAL_TRANSCRIPT]
         session.candidate_text = ""
@@ -331,7 +348,6 @@ def main():
         
 
         
-    openai.api_key = get_oai_key()
 
 
     with chat_tab:
@@ -349,7 +365,6 @@ def main():
             icon_size="1x",
         )
         if audio_bytes:
-            # openai.api_key = get_oai_key()
             st.session_state.audio_bytes = audio_bytes
             audio_file = io.BytesIO(st.session_state.audio_bytes)
             audio_file.name = "temp_audio_file.wav"
@@ -415,7 +430,6 @@ def main():
                 #语音读出面试官的回答
                 # synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config)
                 # result = synthesizer.speak_text_async(completion_text).get()
-
 
         with feedback_tab:
             st.header("候选人面试反馈")
