@@ -57,7 +57,11 @@ speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=service_r
 speech_config.speech_synthesis_language = "zh-CN"
 speech_config.speech_synthesis_voice_name = "zh-CN-XiaoxiaoNeural"
 # 创建一个SpeechSynthesizer对象
-synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config)
+# file_name = "audiofile.wav"
+# file_config = speechsdk.audio.AudioOutputConfig(filename=file_name)
+    
+
+# synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config)
 
 # result = synthesizer.speak_text_async(text).get()
 
@@ -398,6 +402,8 @@ def main():
             if completion_text:
                 print("Completion Result: \n\n", completion_text)
                 # speak_text(completion_text)
+                synthesizer = speechsdk.SpeechSynthesizer(
+                    speech_config=speech_config)
                 result = synthesizer.speak_text_async(completion_text).get()
 
         with feedback_tab:
