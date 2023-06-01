@@ -17,10 +17,10 @@ import streamlit_webrtc as webrtc
 import speech_recognition as sr
 import tempfile 
 import os
-
 import azure.cognitiveservices.speech as speechsdk
-
-
+import openai
+from io import BytesIO
+import io
 
 
 
@@ -52,41 +52,29 @@ speech_key = "8046cb11ab7a494da541e0187e1a1c2d"
 service_region = "eastus"
 
 
+
+
+
+# 文字转语音
+
 # 创建一个SpeechConfig对象并设置密钥和区域
 speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=service_region)
 # 设置语音合成的语言和语音样式（根据需要进行修改）
 speech_config.speech_synthesis_language = "zh-CN"
 speech_config.speech_synthesis_voice_name = "zh-CN-XiaoxiaoNeural"
 # 创建一个SpeechSynthesizer对象
-synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config)
+# file_name = "audiofile.wav"
+# file_config = speechsdk.audio.AudioOutputConfig(filename=file_name)
+    
+
+# synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config)
 
 # result = synthesizer.speak_text_async(text).get()
 
+# 语音转文字
 
-def convert_speech_to_text(audio_bytes):
-    recognizer = sr.Recognizer()
-    
-    # 创建一个临时文件，将音频数据写入其中
-    temp_audio_fd, temp_audio_path = tempfile.mkstemp(suffix='.wav')
-    with open(temp_audio_fd, 'wb') as temp_audio:
-        temp_audio.write(audio_bytes)
 
-    # 使用临时文件进行语音识别
-    with sr.AudioFile(temp_audio_path) as source:
-        audio = recognizer.record(source)
-    
-    try:
-        text = recognizer.recognize_google(audio, language='zh-CN')  # 使用Google语音识别引擎，语言为中文
-        return text
-    except sr.UnknownValueError:
-        print("语音识别无法理解")
-    except sr.RequestError:
-        print("无法连接到语音识别服务")
-    
-    # 删除临时文件
-    os.remove(temp_audio_path)
-    
-    return None
+
 # STOP_SEQUENCES = [
 #     "Candidate:",
 #     "Interviewer:",
@@ -167,14 +155,20 @@ You are a Machine Learning Engineer at at a Digital Health Startup called Bright
 Background on you:
 You work on the machine learning stack at Bright Labs, which involves training and deployment transformer based models to provide a chat-bot like service which helps answer users health questions.
 
-Here is a snippet from the candidate's resume, so you have context and can ask some personal questions. And tailor the interview to the candidate's experiences.
+This is a snippet of a candidate's resume, so you get a sense of the background and can ask some personal questions. And adjust the interview according to the applicant's experience and intended position.
+
+
 
 CANDIDATE RESUME:
 
 {{resume}}
-
-
 (END OF RESUME)
+
+INTENDED POSITION:
+
+{{position}}
+
+(END OF POSITION)
 
 The interview should adhere to the following format:
 
@@ -270,6 +264,7 @@ def get_oai_key():
     return oai_key
 
 
+
 def main():
     utils.init_page_layout()
     session = st.session_state
@@ -278,13 +273,12 @@ def main():
     if "transcript" not in session:
         session.transcript = [INITIAL_TRANSCRIPT]
         session.candidate_text = ""
+        session.resume_text = ""
+        session.custom_prompt_text = INITIAL_QUESTION
+
+    
 
     with st.sidebar:
-        # model = st.selectbox(
-        #     "Model",
-        #     MODELS,
-        #     index=0,
-        # )
         max_tokens = st.number_input(
             "Max tokens",
             value=512,
@@ -297,16 +291,16 @@ def main():
         )
         stop = ["Candidate:", "Interviewer:"]
 
-    resume_tab,chat_tab,question_tab, feedback_tab = st.tabs(["简历填写", "面试", "prompt", "面试反馈"])
+    resume_tab, chat_tab, question_tab,feedback_tab = st.tabs(["简历填写", "面试", "初始prompt","面试反馈"])
 
     with resume_tab:
-        # st.write("\n\n".join(session.transcript))
-        def clear_text():
-            session.transcript.append(f"Candidate: {candidate_text.strip()}")
-            session["candidate_text"] = ""
+        def clear_ResumeText():
+            session.transcript.append(f" {resume_text.strip()}")
+            session["resume_text"] = ""
         resume_text = resume_tab.text_area(
             "候选人简历",
             height=500,
+            key="resume_text",
             
         )
         position = st.selectbox(
@@ -314,18 +308,30 @@ def main():
             positionType,
            
         )
-        print("**********选择岗位是*************\n",position)
-    # run_button1 = st.button("提交", help="提交你的简历", on_click=clear_text)
-        run_button1 = st.button("提交")
+        print("**********选择岗位是*************\n",resume_text)
+    # run_button1 utton("提交",on_click=clear_ResumeText)
     
     with question_tab:
-        question_text = question_tab.text_area(
+        question_text1 = question_tab.text_area(
             "Question Prompt",
             height=700,
+            key="custom_prompt_text",
             value=INITIAL_QUESTION,
         )
+    # with question_tab2:
+    #     question_text2 = question_tab2.text_area(
+    #         "自定义Prompt",
+    #         height=700,
+    #         key="custom_prompt_text",
+    #     )
+   
+        print("========初始prompt=========\n", question_text1)
+        print("*******************************************\n\n")
+        # print("========自定义prompt=========\n", question_text2)
+        
 
         
+    openai.api_key = get_oai_key()
 
 
     with chat_tab:
@@ -343,7 +349,12 @@ def main():
             icon_size="1x",
         )
         if audio_bytes:
-            text = convert_speech_to_text(audio_bytes)
+            # openai.api_key = get_oai_key()
+            st.session_state.audio_bytes = audio_bytes
+            audio_file = io.BytesIO(st.session_state.audio_bytes)
+            audio_file.name = "temp_audio_file.wav"
+            text = openai.Audio.transcribe("whisper-1", audio_file)
+            text = text['text']
             candidate_text = chat_tab.text_area(
                 "Interview Chat",
                 height=50,
@@ -366,14 +377,22 @@ def main():
 
         if run_button:
             if not resume_text:
-                st.error("Please enter a resume")
-            if not question_text:
+                st.error("请输入简历")
+            if not question_text1:
                 st.error("Please enter a question")
-            
+
+            def choosePrompt(question_text1, question_text2):
+                if not question_text2:
+                    question_text = question_text2
+                else:
+                    question_text = question_text1
+                print("question_text", question_text)
+                return question_text
             prompt_text = utils.inject_inputs(
-                question_text, input_keys=["transcript", "resume"], inputs={
+                question_text1, input_keys=["transcript", "resume"], inputs={
                     "transcript": session.transcript,
-                    "resume": INITIAL_RESUME,
+                    "resume": resume_text,
+                    "position":position,
                 }
             ) + "\nInterviewer:"
             print("prompt_text\n\n", prompt_text)
@@ -390,14 +409,27 @@ def main():
             if completion_text:
                 print("Completion Result: \n\n", completion_text)
                 # speak_text(completion_text)
-                result = synthesizer.speak_text_async(completion_text).get()
+            #文本显示面试官的回答
+            session.transcript.append(f"Interviewer: {completion_text}")
+            st.experimental_rerun()
+                #语音读出面试官的回答
+                # synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config)
+                # result = synthesizer.speak_text_async(completion_text).get()
+
 
         with feedback_tab:
             st.header("候选人面试反馈")
+            def choosePrompt(question_text1, question_text2):
+                if not question_text2:
+                    question_text = question_text2
+                else:
+                    question_text = question_text1
+                print("question_text", question_text)
+                return question_text
             prompt_text = utils.inject_inputs(
-                question_text, input_keys=["transcript", "resume"], inputs={
+                question_text1, input_keys=["transcript", "resume"], inputs={
                     "transcript": session.transcript,
-                    "resume": INITIAL_RESUME,
+                    "resume": resume_text,
                 }
             )
             feedback_prompt_text = prompt_text + "\n\n" + FEEDBACK_PROMPT
