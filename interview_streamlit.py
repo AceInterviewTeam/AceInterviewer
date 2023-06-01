@@ -294,11 +294,6 @@ def main():
     
 
     with st.sidebar:
-        # model = st.selectbox(
-        #     "Model",
-        #     MODELS,
-        #     index=0,
-        # )
         max_tokens = st.number_input(
             "Max tokens",
             value=512,
@@ -314,7 +309,6 @@ def main():
     resume_tab, chat_tab, question_tab,feedback_tab = st.tabs(["简历填写", "面试", "初始prompt","面试反馈"])
 
     with resume_tab:
-        # st.write("\n\n".join(session.transcript))
         def clear_ResumeText():
             session.transcript.append(f" {resume_text.strip()}")
             session["resume_text"] = ""
