@@ -324,8 +324,7 @@ def main():
            
         )
         print("**********选择岗位是*************\n",resume_text)
-    # run_button1 = st.button("提交", help="提交你的简历", on_click=clear_text)
-        # run_button1 = st.button("提交",on_click=clear_ResumeText)
+    # run_button1 utton("提交",on_click=clear_ResumeText)
     
     with question_tab:
         question_text1 = question_tab.text_area(
