@@ -18,7 +18,9 @@ import speech_recognition as sr
 import tempfile 
 import os
 import azure.cognitiveservices.speech as speechsdk
-
+import openai
+from io import BytesIO
+import io
 
 
 
@@ -284,7 +286,7 @@ def main():
     utils.init_page_layout()
     session = st.session_state
     oai_client = init_oai_client(get_oai_key())
-
+    openai.api_key = get_oai_key()
     if "transcript" not in session:
         session.transcript = [INITIAL_TRANSCRIPT]
         session.candidate_text = ""
@@ -363,7 +365,11 @@ def main():
             icon_size="1x",
         )
         if audio_bytes:
-            text = convert_speech_to_text(audio_bytes)
+            st.session_state.audio_bytes = audio_bytes
+            audio_file = io.BytesIO(st.session_state.audio_bytes)
+            audio_file.name = "temp_audio_file.wav"
+            text = openai.Audio.transcribe("whisper-1", audio_file)
+            text = text['text']
             candidate_text = chat_tab.text_area(
                 "Interview Chat",
                 height=50,
