@@ -105,36 +105,39 @@ def convert_speech_to_text(audio_bytes):
 #     "OUTPUT",
 # ]
 FEEDBACK_PROMPT = """
-(End of interview)
+(面试结束)
+请就候选人在面试中的表现提供反馈。 即使他们的简历很棒
+关注他们的面试表现很重要。 如果聊天时间很短而你还不够
+提供反馈信息，请提供简历反馈。 并解释你
+希望在面试中看到更多的候选人。
 
-Please provide feedback on the candidate's performance in the interview. Even if their resume is great
-it's important to focus on their interview performance. If the chat is short and you don't have enough
-information to provide feedback, please provide feedback on the resume instead. And explain that you 
-would like to see more of the candidate in the interview.
+请包括以下信息：
+* 候选人优势
+* 候选人的弱点
+* 总体结论
+* 雇用/不雇用建议
+* 推荐岗位
 
-Please include the following information:
-* Candidates strengths
-* Candidates weaknesses
-* Overall conclusion
-* Hire / No-Hire recommendation
+您的反馈应采用以下格式：
 
-Your feedback should be in the following format:
+优势：
 
-Strengths:
+<在此列出优势>
 
-<list strengths here>
+弱点：
 
-Weaknesses:
+<在此列出弱点>
 
-<list weaknesses here>
+结论：
 
-Conclusion:
+<在此列出的结论>
 
-<conclusion here>
+建议：<雇用/不雇用>
+如果建议不雇用，推荐岗位选择输出无
+推荐岗位：
+<在此列出的推荐岗位>
 
-Recommendation: <Hire / No-Hire>
-
-YOUR FEEDBACK:
+您的反馈：
 """.strip()
 
 INITIAL_TRANSCRIPT = "Interviewer: 你好"
@@ -165,15 +168,7 @@ Apr 2015 - Nov 2016 · 1 yr 8 mos
 """
 
 INITIAL_QUESTION = """
-System Design Interview
-
-You are a Machine Learning Engineer at at a Digital Health Startup called Bright Labs. Today you are giving a System Design interview to a prospective backend candidate. Your job is to ask the candidate a system design question and then write up feedback on the candidate to share with the hiring committee
-
-Background on you:
-You work on the machine learning stack at Bright Labs, which involves training and deployment transformer based models to provide a chat-bot like service which helps answer users health questions.
-
-This is a snippet of a candidate's resume, so you get a sense of the background and can ask some personal questions. And adjust the interview according to the applicant's experience and intended position.
-
+You are an professional interviewer in a tech company. You're interviewing the user who applied for {{position}}. 
 
 
 CANDIDATE RESUME:
@@ -189,37 +184,24 @@ INTENDED POSITION:
 
 The interview should adhere to the following format:
 
-2 minutes - opening intros (share about yourself, and ask about the candidate)
-3 minutes - ask the candidate to tell you about a system they've built at work
-30 minutes - ask the candidate a system design question
-5 minutes - ask the candidate if they have any questions for you
-
-Here is the system design question you plan to ask:
-
-Question: Design a type-ahead search engine service.
-Problem: This service partially completes the search queries by displaying n number of suggestions for completing the query that the user intended to search.
+2mins- opening intros ，"tell me about yourself" questions
+10mins - ask the candidate experience which is relevant to the {{position}} in details, especially using "how"questions
+5mins - ask the candidate professional knowledge details relevant to the {{position}}
+2mins - ask the candidate if they have any questions for you
+thanks the candidate for his time, tell when the decision will be made, and the interview ends
 
 Some clarifications (if the candidate asks or it feels appropriate to share):
 
-0. What are the input and output of the system?
-The input will be the beginning of a user search query, for example: "how to" and the output should be a list of likely auto completions: ["how to grill", "how to grill a hamburger", "how to play tennis"]
-
-1. What is the data source for generating the suggestions?
-
-We have data about historical queries and the frequency of that query, which can be simplified to:
-query_id, query
-1, how to grill a hamburger
-2, how to play tennis
-3, how to play tennis
-4. how to play tennis well
-
-2. What are the expected response time and throughput of this service?
+1. What are the expected response time and throughput of this service?
 
 Ideally within 1 second each time the user changes their query or types a new word or words.
 
-3. How many suggestions need to be displayed in response to a query?
+2. How many suggestions need to be displayed in response to a query?
 
 5 to 10 suggestions
+
+3. If the user inputs "stop", "bye" this kind of words, terminate the interview.
+4. Do not repeat the interview.
 
 Here are the rules for the conversation:
 * You are a chat bot who conducts system design interviews
@@ -298,7 +280,7 @@ def main():
     with st.sidebar:
         max_tokens = st.number_input(
             "Max tokens",
-            value=512,
+            value=2048,
             min_value=0,
             max_value=2048,
             step=2,
@@ -425,11 +407,11 @@ def main():
                 print("Completion Result: \n\n", completion_text)
                 # speak_text(completion_text)
             #文本显示面试官的回答
-            session.transcript.append(f"Interviewer: {completion_text}")
-            st.experimental_rerun()
+            # session.transcript.append(f"Interviewer: {completion_text}")
+            # st.experimental_rerun()
                 #语音读出面试官的回答
-                # synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config)
-                # result = synthesizer.speak_text_async(completion_text).get()
+                synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config)
+                result = synthesizer.speak_text_async(completion_text).get()
 
         with feedback_tab:
             st.header("候选人面试反馈")
@@ -453,7 +435,7 @@ def main():
                     prompt_text=feedback_prompt_text,
                     model="text-davinci-003",  # type: ignore
                     stop=stop,
-                    max_tokens=400,  # type: ignore
+                    max_tokens=2048,  # type: ignore
                     temperature=temperature,
                     best_of=3,
                 )
