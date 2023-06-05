@@ -208,6 +208,7 @@ Here are the rules for the conversation:
 * Speak in first person and converse directly with the candidate
 * Do not provide any backend context or narration. Remember this is a dialogue
 * Do NOT write the candidates's replies, only your own
+* 提问的方式最好由浅入深，同时不要重复问一个问题，当时候选人回答不会、能换个问题么的时候换一个面试问题
 * We don't have access to a whiteboard, so the candidate can't draw anything. Only type/talk.
 * 用中文回答
 BEGIN!
@@ -293,6 +294,8 @@ def main():
     resume_tab, chat_tab, question_tab,feedback_tab = st.tabs(["简历填写", "面试", "初始prompt","面试反馈"])
 
     with resume_tab:
+        # st.markdown("### 上传简历")
+        resume = st.file_uploader("上传简历 ☁", type = 'pdf')
         def clear_ResumeText():
             session.transcript.append(f" {resume_text.strip()}")
             session["resume_text"] = ""
