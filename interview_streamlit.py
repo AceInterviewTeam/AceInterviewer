@@ -273,17 +273,17 @@ def main():
 
     
 
-    with st.sidebar:
-        max_tokens = st.number_input(
-            "Max tokens",
-            value=2048,
-            min_value=0,
-            max_value=2048,
-            step=2,
-        )
-        temperature = st.number_input(
-            "Temperature", value=0.7, step=0.05
-        )
+    # with st.sidebar:
+    #     max_tokens = st.number_input(
+    #         "Max tokens",
+    #         value=2048,
+    #         min_value=0,
+    #         max_value=2048,
+    #         step=2,
+    #     )
+    #     temperature = st.number_input(
+    #         "Temperature", value=0.7, step=0.05
+    #     )
         stop = ["Candidate:", "Interviewer:"]
 
     resume_tab, chat_tab,feedback_tab = st.tabs(["简历填写", "面试", "面试反馈"])
@@ -401,7 +401,7 @@ def main():
                 model="text-davinci-003",  # type: ignore
                 stop=stop,
                 max_tokens=max_tokens,  # type: ignore
-                temperature=temperature,
+                temperature=0.5,
             )
             completion_text = resp["completion"].strip()
             if completion_text:
@@ -437,7 +437,7 @@ def main():
                     model="text-davinci-003",  # type: ignore
                     stop=stop,
                     max_tokens=2048,  # type: ignore
-                    temperature=temperature,
+                    temperature=0.5,
                     best_of=3,
                 )
                 st.write(resp["completion"])
