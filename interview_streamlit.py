@@ -327,7 +327,6 @@ def main():
         question_text1 = INITIAL_QUESTION
         print("========初始prompt=========\n", question_text1)
         print("*******************************************\n\n")
-        # print("========自定义prompt=========\n", question_text2)
         
 
         
@@ -408,11 +407,11 @@ def main():
                 print("Completion Result: \n\n", completion_text)
                 # speak_text(completion_text)
             #文本显示面试官的回答
-            # session.transcript.append(f"Interviewer: {completion_text}")
-            # st.experimental_rerun()
+            session.transcript.append(f"Interviewer: {completion_text}")
+            st.experimental_rerun()
                 #语音读出面试官的回答
-                synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config)
-                result = synthesizer.speak_text_async(completion_text).get()
+                # synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config)
+                # result = synthesizer.speak_text_async(completion_text).get()
 
         with feedback_tab:
             st.header("候选人面试反馈")
@@ -439,7 +438,6 @@ def main():
                     stop=stop,
                     max_tokens=2048,  # type: ignore
                     temperature=0.5,
-                    best_of=3,
                 )
                 st.write(resp["completion"])
 
