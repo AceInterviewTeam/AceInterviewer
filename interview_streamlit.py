@@ -243,7 +243,7 @@ def run_completion(
     resp = oai_client.complete(
         prompt_text,
         model=model,  # type: ignore
-        max_tokens=max_tokens,  # type: ignore
+        max_tokens=2048,  # type: ignore
         temperature=temperature,
         stop=stop or None,
         best_of=best_of,
@@ -400,7 +400,7 @@ def main():
                 prompt_text=prompt_text,
                 model="text-davinci-003",  # type: ignore
                 stop=stop,
-                max_tokens=max_tokens,  # type: ignore
+                max_tokens=2048,  # type: ignore
                 temperature=0.5,
             )
             completion_text = resp["completion"].strip()
