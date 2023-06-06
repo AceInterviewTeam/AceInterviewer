@@ -284,7 +284,7 @@ def main():
     #     temperature = st.number_input(
     #         "Temperature", value=0.7, step=0.05
     #     )
-        stop = ["Candidate:", "Interviewer:"]
+    stop = ["Candidate:", "Interviewer:"]
 
     resume_tab, chat_tab,feedback_tab = st.tabs(["简历填写", "面试", "面试反馈"])
 
@@ -427,6 +427,7 @@ def main():
                 question_text1, input_keys=["transcript", "resume"], inputs={
                     "transcript": session.transcript,
                     "resume": resume_text,
+                    "position":position,
                 }
             )
             feedback_prompt_text = prompt_text + "\n\n" + FEEDBACK_PROMPT
