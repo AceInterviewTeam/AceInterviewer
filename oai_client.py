@@ -238,5 +238,5 @@ if __name__ == "__main__":
     )
 
     result = oai_client.complete(prompt=args.prompt, request_tag="test")
-
+   
     pprint.pp(result)

@@ -110,7 +110,7 @@ FEEDBACK_PROMPT = """
 关注他们的面试表现很重要。 如果聊天时间很短而你还不够
 提供反馈信息，请提供简历反馈。 并解释你
 希望在面试中看到更多的候选人。
-
+通过面试的表现、候选人的简历信息给出一些岗位匹配推荐
 请包括以下信息：
 * 候选人优势
 * 候选人的弱点
@@ -134,6 +134,7 @@ FEEDBACK_PROMPT = """
 
 建议：<雇用/不雇用>
 如果建议不雇用，推荐岗位选择输出无
+
 推荐岗位：
 <在此列出的推荐岗位>
 
@@ -407,11 +408,11 @@ def main():
                 print("Completion Result: \n\n", completion_text)
                 # speak_text(completion_text)
             #文本显示面试官的回答
-            session.transcript.append(f"Interviewer: {completion_text}")
-            st.experimental_rerun()
+            # session.transcript.append(f"Interviewer: {completion_text}")
+            # st.experimental_rerun()
                 #语音读出面试官的回答
-                # synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config)
-                # result = synthesizer.speak_text_async(completion_text).get()
+                synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config)
+                result = synthesizer.speak_text_async(completion_text).get()
 
         with feedback_tab:
             st.header("候选人面试反馈")
