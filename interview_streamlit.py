@@ -143,28 +143,23 @@ FEEDBACK_PROMPT = """
 INITIAL_TRANSCRIPT = "Interviewer: 你好"
 
 INITIAL_RESUME = """
-Senior AI/Robotics Engineer
-Cruise Automation · Full-time
-Jun 2018 - Present · 4 yrs 6 mos
-San Francisco Bay Area
+工作经历：
+京东
+2022年07月 - 至今
+前端工程师
+北京
+负责京东金融跨端技术开发，适配android、ios、h5实现一码三端，综合了web生态和native组件，让js执行代码后用 native的组件进行渲染提高研发效率
+通过h5容器实现原生页面与h5的交互，实现站外快速唤起以及业务解耦，提供基础支持能力
+基于自研跨端方案为更多业务赋能，使用跨端方案人均吞吐量提升了80%以上
+项目经历：
+京东金融
+共建跨端技术底层sdk，为业务提供基础支撑能力
+增加组件库市场，对业务中的用到的模块组件化，便于代码复用提高开发效率
+通过h5容器对应用的权限管控、合规检测、js桥接native以及h5生态
 
-* Full-stack machine learning from dataset generation to model deployment
-* Co-founded our Machine Learning Platform team and led pod of 10+ engineers
-* Architected lineage/metadata management service and experiment tracking UI
-* Developed internal modeling framework to reduce boilerplate
-* Developed data pipelines, data serialization tooling, and high-performance data loader
-* Optimized large-scale distributed training jobs and debugged failures
+技能：vuejs、javascript；python、java开发；熟悉常用的深度学习算法，目标检测及跟踪；
+语言：英语（CET-6）
 
-Amazon
-4 yrs 3 mos
-Greater Seattle Area
-Software Development Engineer
-Apr 2015 - Nov 2016 · 1 yr 8 mos
-
-• Zero-click Ordering, Amazon's recurring delivery platform
-• Developed selection management service using NoSQL-based workflow approach
-• Developed program to enable category-specific discount structures and extend Subscribe & Save to millions of products
-• Java, DynamoDB, Oracle, SQS, S3, Spring
 """
 
 INITIAL_QUESTION = """
@@ -291,20 +286,23 @@ def main():
         )
         stop = ["Candidate:", "Interviewer:"]
 
-    resume_tab, chat_tab, question_tab,feedback_tab = st.tabs(["简历填写", "面试", "初始prompt","面试反馈"])
+    resume_tab, chat_tab,feedback_tab = st.tabs(["简历填写", "面试", "面试反馈"])
 
     with resume_tab:
         # st.markdown("### 上传简历")
         resume = st.file_uploader("上传简历 ☁", type = 'pdf')
+        # pdf_reader = PdfReader(self.pdf_file)
+        #     text = ""
         def clear_ResumeText():
             session.transcript.append(f" {resume_text.strip()}")
             session["resume_text"] = ""
-        resume_text = resume_tab.text_area(
-            "候选人简历",
-            height=500,
-            key="resume_text",
+        # resume_text = resume_tab.text_area(
+        #     "候选人简历",
+        #     height=500,
+        #     key="resume_text",
             
-        )
+        # )
+        resume_text = INITIAL_RESUME
         position = st.selectbox(
             "岗位",
             positionType,
@@ -313,20 +311,20 @@ def main():
         print("**********选择岗位是*************\n",resume_text)
     # run_button1 utton("提交",on_click=clear_ResumeText)
     
-    with question_tab:
-        question_text1 = question_tab.text_area(
-            "Question Prompt",
-            height=700,
-            key="custom_prompt_text",
-            value=INITIAL_QUESTION,
-        )
+    # with question_tab:
+    #     question_text1 = question_tab.text_area(
+    #         "Question Prompt",
+    #         height=700,
+    #         key="custom_prompt_text",
+    #         value=INITIAL_QUESTION,
+    #     )
     # with question_tab2:
     #     question_text2 = question_tab2.text_area(
     #         "自定义Prompt",
     #         height=700,
     #         key="custom_prompt_text",
     #     )
-   
+        question_text1 = INITIAL_QUESTION
         print("========初始prompt=========\n", question_text1)
         print("*******************************************\n\n")
         # print("========自定义prompt=========\n", question_text2)
